@@ -68,8 +68,10 @@ def search_places(query: str, api_key: str) -> list[dict]:
         try:
             logger.info("Retrying in 2 seconds...")
             time.sleep(2)
-            search = GoogleSearch(params)
-            data = search.get_dict()
+            
+            # Retry with new API
+            client = serpapi.Client(api_key=api_key)
+            data = client.search(params)
             local_results = data.get("local_results", [])
             
             for place in local_results:

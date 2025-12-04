@@ -212,6 +212,11 @@ def run_premium_generation(target_countries, num_leads, quality_threshold):
         from src.lead_quality_filter import filter_serious_clients_only
         from src.queries import CITIES, CATEGORIES
         from src.filters import remove_duplicates
+        from src.config import load_config
+        
+        # Load API key
+        config = load_config()
+        api_key = config.get('SERPAPI_KEY')
         
         generation_status['progress'] = 15
         generation_status['message'] = 'Preparing search queries...'
@@ -253,7 +258,7 @@ def run_premium_generation(target_countries, num_leads, quality_threshold):
             
             try:
                 # Use SerpAPI for reliable scraping
-                results = search_places(query)
+                results = search_places(query, api_key)
                 
                 if not results:
                     continue
