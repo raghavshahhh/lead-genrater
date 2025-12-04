@@ -1,4 +1,4 @@
-# 🏆 Premium Lead Generation Bot
+gi# 🏆 Premium Lead Generation Bot
 
 **Fully Automatic Lead Generation & Outreach System**
 
@@ -134,8 +134,26 @@ Read the documentation files for detailed instructions:
 
 ## 📄 License
 
-Private - For RagsPro.com use only.
+Private - For Ragspro.com use only.
 
 ---
 
-**Made with ❤️ for RagsPro.com**
+## 👨‍💻 **About Raghav Shah**
+
+**Founder, Ragspro.com - Software Development Agency**
+
+📞 **Phone:** +918700048490  
+📧 **Email:** ragsproai@gmail.com  
+🌐 **Website:** [ragspro.com](https://ragspro.com)
+
+### **Connect with me:**
+- 💼 **LinkedIn:** [linkedin.com/in/raghavshahhh](https://www.linkedin.com/in/raghavshahhh/)
+- 💻 **GitHub:** [github.com/raghavshahhhh](https://github.com/raghavshahhhh)
+- 📸 **Instagram:** [instagram.com/raghavshahhhh](https://www.instagram.com/raghavshahhhh)
+- 🎥 **YouTube:** [youtube.com/@raghavshahhhh](https://www.youtube.com/@raghavshahhhh)
+- 🐦 **Twitter:** [x.com/raghavshahhhh](https://x.com/raghavshahhhh)
+- 💼 **Fiverr:** [fiverr.com/s/WEpRvR7](https://www.fiverr.com/s/WEpRvR7)
+
+---
+
+**Made with 🔥 by Raghav Shah for Ragspro.com**

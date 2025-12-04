@@ -75,12 +75,14 @@ Example: "15-min call to explore fit? [Calendly link]"
 
 Signature:
 Raghav Shah
-Founder, Ragspro.com
+Founder, Ragspro.com - Software Development Agency
 📞 +918700048490
-📧 raghav@ragspro.com
+📧 ragsproai@gmail.com
 🌐 ragspro.com
-💼 linkedin.com/in/raghavshahhh
-💻 github.com/raghavshahhhh
+
+Connect:
+💼 LinkedIn: linkedin.com/in/raghavshahhh
+💻 GitHub: github.com/raghavshahhhh
 
 CRITICAL RULES:
 1. Keep it under 100 words total
