@@ -35,33 +35,58 @@ class GeminiAI:
         # Use owner name or default
         owner = owner_name if owner_name else f"{business_name} Team"
         
-        prompt = f"""Generate a professional, SHORT cold email using this EXACT template structure:
+        prompt = f"""You are writing on behalf of Ragspro.com - a premium software development agency.
 
-Hi {owner},
+Generate a professional, SHORT cold email (under 100 words) for this prospect:
 
-I came across {business_name} while researching {business_type} companies in {city}.
+Business: {business_name}
+Type: {business_type}
+Location: {city}
+Rating: {rating}★ ({reviews} reviews)
 
-We help businesses increase inbound clients consistently without paid advertising.
+RAGSPRO VALUE PROPOSITION:
+- Fast MVP delivery (2-4 weeks)
+- Modern tech stack (React, Node.js, Python, AWS)
+- Transparent pricing ($5k-$50k projects)
+- Direct developer communication
+- Proven track record: LawAI, Glow, HimShakti
+- 200+ projects delivered, 50+ happy clients
 
-I quickly reviewed your online presence and noticed a few growth gaps that could convert into more leads.
+EMAIL STRUCTURE (MUST FOLLOW):
 
-Would you like me to send you a short growth breakdown for {business_name}?
+Line 1: Personalized observation about their business
+Example: "Noticed {business_name} is growing fast - congrats on {rating}★ rating!"
 
-Regards,
+Line 2: Identify specific tech problem they likely have
+Examples based on business type:
+- SaaS/Tech: "Many companies at your stage struggle with shipping features fast while maintaining quality"
+- E-commerce: "Most e-commerce brands need better checkout experience and mobile optimization"
+- Fintech: "Fintech companies often need help with compliance, security, and scalability"
+- Startup: "Startups need to validate ideas quickly with MVPs before full builds"
+
+Line 3: How Ragspro solves it (brief, specific)
+Example: "We've helped 50+ startups ship MVPs in 2-4 weeks using modern tech"
+
+Line 4: Social proof (mention specific projects)
+Example: "Recent work: LawAI (legal tech), Glow (AI photo editor), HimShakti (e-commerce)"
+
+Line 5: Easy CTA (15-min call)
+Example: "15-min call to explore fit? [Calendly link]"
+
+Signature:
 Raghav Shah
-Founder – RagsPro
-www.ragspro.com
-+918700048490
-raghav@ragspro.com
+Founder, Ragspro.com
++918700048490 | raghav@ragspro.com
+Portfolio: ragspro.com
 
 CRITICAL RULES:
-1. Keep it SHORT and professional (max 100 words)
-2. Use the EXACT template structure above
-3. Don't add extra paragraphs or fluff
-4. Keep the tone consultative, not salesy
-5. Focus on "growth gaps" and "growth breakdown"
-6. End with the question about growth breakdown
-7. Include all contact details at end
+1. Keep it under 100 words total
+2. Sound like expert consultant, not salesperson
+3. Be specific about tech/development (not generic marketing)
+4. Mention actual projects (LawAI, Glow, HimShakti)
+5. Focus on speed + quality + proven results
+6. Professional but friendly tone
+7. No fluff or buzzwords
 
 Business Details:
 - Name: {business_name}
@@ -155,18 +180,19 @@ Write ONLY the email body (no subject line):"""
         Returns:
             WhatsApp message text
         """
-        prompt = f"""You are Raghav Shah from RagsPro.com - India's top development agency. Write a HIGHLY CONVERTING WhatsApp message that gets INSTANT response.
+        prompt = f"""You are Raghav Shah from Ragspro.com - premium software development agency. Write a SHORT WhatsApp message (80-90 words) that gets response.
 
 Business: {business_name} ({business_type})
 
-YOUR AGENCY - RagsPro.com (Delhi, India):
-Services: Mobile Apps, Web Apps, SaaS, E-commerce, AI Integration, UX/UI Design, Brand Design, SEO
+RAGSPRO - Software Development Agency:
+Core Services: MVP Development, SaaS Products, Mobile Apps, E-commerce Platforms
+Unique Value: Ship MVPs in 2-4 weeks, Modern tech stack, Transparent pricing
 Real Projects: LawAI (legal tech), Glow (AI photo editor), HimShakti (e-commerce)
 Track Record: 200+ projects, 50+ clients, 5★ ratings
 Portfolio: ragspro.com
 Contact: +918700048490 | raghav@ragspro.com
 
-CRITICAL RULES - Professional WhatsApp Approach:
+MESSAGE STRUCTURE - Professional WhatsApp:
 
 1. OPENER: "Hey! 🚀 Raghav from RagsPro.com (Delhi)"
 

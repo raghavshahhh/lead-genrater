@@ -12,45 +12,70 @@ logger = logging.getLogger(__name__)
 class LeadQualityScorer:
     """Scores leads based on likelihood of being a high-paying, serious client."""
     
-    # High-value indicators (positive signals)
+    # 🎯 RAGSPRO-SPECIFIC: Software development client indicators
     HIGH_VALUE_KEYWORDS = [
+        # Buying signals for dev services (HIGHEST priority)
+        "hiring", "looking for", "seeking", "need developer",
+        "software partner", "tech team", "engineering",
+        "MVP", "product development", "app development",
+        
+        # Business stage indicators (well-funded)
+        "funded", "series A", "series B", "venture backed",
+        "raised", "revenue", "profitable", "growth",
+        
         # Business size indicators
-        "chain", "group", "international", "global", "enterprise",
-        "corporate", "luxury", "premium", "exclusive", "boutique",
+        "startup", "scale-up", "enterprise", "international",
+        "global", "corporate", "group",
+        
+        # Tech-savvy indicators (good fit)
+        "SaaS", "platform", "marketplace", "API",
+        "cloud", "mobile app", "web app", "e-commerce",
+        "fintech", "AI", "machine learning", "blockchain",
         
         # Professional indicators
-        "certified", "licensed", "accredited", "award-winning",
-        "established", "since", "years", "decades",
-        
-        # Tech-savvy indicators
-        "online", "digital", "e-commerce", "booking", "app",
-        
-        # High-end services
-        "luxury", "premium", "executive", "VIP", "elite",
-        "bespoke", "custom", "personalized",
+        "established", "award-winning", "certified",
+        "accredited", "since", "years experience",
     ]
     
-    # Low-value indicators (negative signals)
+    # 🚫 RED FLAGS: Bad clients for software development
     LOW_VALUE_KEYWORDS = [
-        # Small/local only
+        # No budget indicators
+        "cheap", "budget", "affordable", "discount", "free",
+        "equity only", "rev share", "profit share", "no budget",
+        "student project", "volunteer", "intern",
+        
+        # Small/non-serious
         "home-based", "freelance", "solo", "one-man",
+        "hobby", "part-time", "side project", "casual",
         
-        # Budget indicators
-        "cheap", "budget", "affordable", "discount", "bargain",
-        
-        # Non-serious
-        "hobby", "part-time", "side", "casual",
+        # Wrong fit
+        "looking for freelancer", "quick fix", "small task",
+        "one-time", "urgent", "ASAP only",
     ]
     
-    # Business categories with HIGH budgets
+    # 💰 HIGH-BUDGET CATEGORIES: Best clients for software development
     HIGH_BUDGET_CATEGORIES = [
-        "law", "legal", "attorney", "lawyer",
-        "investment", "finance", "wealth", "capital",
-        "real estate", "property",
-        "cosmetic", "plastic surgery", "medical",
-        "luxury", "premium",
-        "tech", "software", "saas", "fintech",
-        "consulting", "advisory",
+        # Tech companies (PERFECT fit - always need devs)
+        "saas", "software", "tech startup", "platform",
+        "fintech", "AI company", "machine learning",
+        "blockchain", "cryptocurrency", "web3",
+        "marketplace", "e-commerce platform",
+        
+        # Well-funded industries
+        "venture capital", "private equity", "investment",
+        "hedge fund", "wealth management",
+        
+        # Digital-first businesses
+        "online education", "edtech", "healthtech",
+        "proptech", "insurtech", "legaltech",
+        
+        # Enterprise
+        "enterprise software", "B2B software",
+        "consulting firm", "digital agency",
+        
+        # E-commerce (always optimizing)
+        "e-commerce", "online store", "DTC brand",
+        "marketplace", "retail tech",
     ]
     
     # Business categories with LOW budgets

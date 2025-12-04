@@ -1,20 +1,22 @@
 """Query generation module for Lead Generation Bot."""
 
-# HIGH-PAYING INTERNATIONAL CITIES (Priority: USA, UK, Dubai, Canada, Australia, Europe)
+# 🎯 RAGSPRO TARGET CITIES - Software Development Clients
+# Priority: Tech hubs with high-budget startups and companies
 CITIES = [
     # USA - Top Tier (Highest paying clients - $5000-$50000 projects)
-    "New York, USA",
-    "San Francisco, USA",
-    "Los Angeles, USA",
-    "Chicago, USA",
-    "Miami, USA",
-    "Austin, USA",
-    "Seattle, USA",
-    "Boston, USA",
-    "Dallas, USA",
-    "San Diego, USA",
-    "Denver, USA",
-    "Atlanta, USA",
+    # Tech Hubs First (Most startups & SaaS companies)
+    "San Francisco, USA",  # Silicon Valley - #1 priority
+    "Austin, USA",         # Tech hub, startup friendly
+    "Seattle, USA",        # Amazon, Microsoft ecosystem
+    "New York, USA",       # Fintech, E-commerce
+    "Boston, USA",         # Biotech, Healthcare tech
+    "Los Angeles, USA",    # Entertainment tech, E-commerce
+    "Chicago, USA",        # Enterprise software
+    "Miami, USA",          # Latin America tech hub
+    "Denver, USA",         # Growing tech scene
+    "San Diego, USA",      # Biotech, Healthcare
+    "Dallas, USA",         # Enterprise, B2B
+    "Atlanta, USA",        # Fintech, Logistics tech
     
     # UK - Top Tier (High paying - £3000-£30000 projects)
     "London, UK",
@@ -74,17 +76,18 @@ CITIES = [
     "Kolkata, India",
 ]
 
-# HIGH-VALUE BUSINESS CATEGORIES (Businesses that pay MAXIMUM for tech services)
-# Sorted by average project value (highest to lowest)
+# 🎯 RAGSPRO TARGET CATEGORIES - Companies Needing Software Development
+# Sorted by: 1) Likelihood to need dev services, 2) Budget size
 CATEGORIES = [
     # Tech & SaaS (HIGHEST payout: $10k-$100k+ projects)
-    "software company",
-    "tech startup",
-    "SaaS company",
-    "fintech company",
-    "AI company",
-    "blockchain company",
-    "cybersecurity firm",
+    # These companies ALWAYS need developers
+    "SaaS company",              # Always building features
+    "tech startup",              # Need MVP/product development
+    "software company",          # May need augmentation
+    "fintech company",           # Complex, high-budget projects
+    "AI company",                # Cutting-edge, well-funded
+    "e-commerce platform",       # Always optimizing
+    "marketplace platform",      # Two-sided platforms complex
     
     # Finance & Investment (HIGHEST payout: $15k-$150k+ projects)
     "investment firm",
