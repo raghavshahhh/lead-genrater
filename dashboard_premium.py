@@ -212,11 +212,20 @@ def run_premium_generation(target_countries, num_leads, quality_threshold):
         from src.lead_quality_filter import filter_serious_clients_only
         from src.queries import CITIES, CATEGORIES
         from src.filters import remove_duplicates
-        from src.config import load_config
+        import os
         
-        # Load API key
-        config = load_config()
-        api_key = config.get('SERPAPI_KEY')
+        # Load API key from environment or config
+        api_key = os.getenv('SERPAPI_KEY')
+        if not api_key:
+            try:
+                from src.config import load_config
+                config = load_config()
+                api_key = config.get('SERPAPI_KEY')
+            except Exception as e:
+                logger.error(f"Config error: {e}")
+                generation_status['running'] = False
+                generation_status['message'] = f'❌ Configuration error: {str(e)}'
+                return
         
         generation_status['progress'] = 15
         generation_status['message'] = 'Preparing search queries...'
