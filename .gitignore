@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+ENV/
+
+# Data files (contains lead data - keep private!)
+data/*.json
+data/*.csv
+*.log
+logs/
+
+# Config (IMPORTANT - contains API keys!)
+config/settings.json
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+
+# Kiro
+.kiro/
+
+# Archives
+docs/archive/
+
+# Test files
+.pytest_cache/
+.hypothesis/
+htmlcov/
+.coverage
+
+# OS
+Thumbs.db
