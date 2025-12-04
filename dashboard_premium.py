@@ -214,18 +214,26 @@ def run_premium_generation(target_countries, num_leads, quality_threshold):
         from src.filters import remove_duplicates
         import os
         
-        # Load API key from environment or config
-        api_key = os.getenv('SERPAPI_KEY')
+        # HARDCODED API KEY - Direct solution (no config file needed)
+        api_key = "793519f7f024954f8adaec7419aab0e07fb01449bf17f2cb89b0ffac053f860c"
+        
+        # Fallback: Try environment variable
+        if not api_key:
+            api_key = os.getenv('SERPAPI_KEY')
+        
+        # Fallback: Try config file (if exists)
         if not api_key:
             try:
                 from src.config import load_config
                 config = load_config()
                 api_key = config.get('SERPAPI_KEY')
             except Exception as e:
-                logger.error(f"Config error: {e}")
-                generation_status['running'] = False
-                generation_status['message'] = f'❌ Configuration error: {str(e)}'
-                return
+                logger.warning(f"Config file not found, using hardcoded key: {e}")
+        
+        if not api_key:
+            generation_status['running'] = False
+            generation_status['message'] = '❌ API Key not configured'
+            return
         
         generation_status['progress'] = 15
         generation_status['message'] = 'Preparing search queries...'

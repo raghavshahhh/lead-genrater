@@ -76,8 +76,11 @@ Example: "15-min call to explore fit? [Calendly link]"
 Signature:
 Raghav Shah
 Founder, Ragspro.com
-+918700048490 | raghav@ragspro.com
-Portfolio: ragspro.com
+📞 +918700048490
+📧 raghav@ragspro.com
+🌐 ragspro.com
+💼 linkedin.com/in/raghavshahhh
+💻 github.com/raghavshahhhh
 
 CRITICAL RULES:
 1. Keep it under 100 words total
@@ -330,9 +333,19 @@ No obligation - just professional advice from someone who wants to see your busi
 
 Best regards,
 Raghav Shah
-Founder, RagsPro.com
-+918700048490 | raghav@ragspro.com
-Portfolio: ragspro.com"""
+Founder, Ragspro.com - Software Development Agency
+
+📞 +918700048490
+📧 raghav@ragspro.com
+🌐 ragspro.com
+
+Connect with me:
+💼 LinkedIn: linkedin.com/in/raghavshahhh
+💻 GitHub: github.com/raghavshahhhh
+📸 Instagram: instagram.com/raghavshahhhh
+🎥 YouTube: youtube.com/@raghavshahhh
+🐦 Twitter: x.com/raghavshahhhh
+💼 Fiverr: fiverr.com/s/WEpRvR7"""
     
     def _fallback_whatsapp(self, business_name: str, business_type: str) -> str:
         """Fallback WhatsApp template with problem identification."""

@@ -46,11 +46,20 @@ class GmailSender:
             signature = """
 
 Best regards,
-Raghav
-RagsPro.com
-Digital Marketing & Web Development Agency
-Website: ragspro.com
-Email: ragsproai@gmail.com"""
+Raghav Shah
+Founder, Ragspro.com - Software Development Agency
+
+📞 +918700048490
+📧 raghav@ragspro.com
+🌐 ragspro.com
+
+Connect:
+💼 LinkedIn: linkedin.com/in/raghavshahhh
+💻 GitHub: github.com/raghavshahhhh
+📸 Instagram: instagram.com/raghavshahhhh
+🎥 YouTube: youtube.com/@raghavshahhh
+🐦 Twitter: x.com/raghavshahhhh
+💼 Fiverr: fiverr.com/s/WEpRvR7"""
             
             full_body = body + signature
             
