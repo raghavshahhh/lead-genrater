@@ -298,6 +298,12 @@ def run_premium_generation(target_countries, num_leads, quality_threshold):
         
         unique_leads = remove_duplicates(premium_leads)
         
+        # Add timestamp to new leads so we can identify them
+        timestamp = datetime.now().isoformat()
+        for lead in unique_leads:
+            lead['generated_at'] = timestamp
+            lead['is_new'] = True
+        
         with status_lock:
             generation_status['progress'] = 100
             generation_status['leads_found'] = len(unique_leads)
@@ -343,17 +349,24 @@ def debug_files():
 
 @app.route('/api/leads')
 def get_leads():
-    """Get all premium leads (AI content generated on-demand)."""
+    """Get all premium leads (AI content generated on-demand), sorted with newest first."""
     try:
         leads = load_premium_leads()
+        
+        # Sort leads: newest first (by generated_at timestamp)
+        # This ensures new leads appear at the top
+        def get_timestamp(lead):
+            return lead.get('generated_at', lead.get('created_at', '2000-01-01'))
+        
+        leads_sorted = sorted(leads, key=get_timestamp, reverse=True)
         
         # Don't generate AI content here - too slow for 500+ leads
         # Frontend will request it per-lead as needed
         
         return jsonify({
             'success': True,
-            'leads': leads,
-            'total': len(leads)
+            'leads': leads_sorted,
+            'total': len(leads_sorted)
         })
     except Exception as e:
         logger.error(f"Error getting leads: {e}")
@@ -473,6 +486,33 @@ def stop_generation():
         generation_status['message'] = '🛑 Stopping...'
     
     return jsonify({'success': True, 'message': 'Stop signal sent'})
+
+
+@app.route('/api/leads/clear', methods=['POST'])
+@limiter.limit("10 per hour")
+def clear_all_leads():
+    """Clear all leads from database."""
+    try:
+        # Backup current leads before clearing
+        leads = load_premium_leads()
+        if leads:
+            backup_path = f"data/backups/leads_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            os.makedirs("data/backups", exist_ok=True)
+            with open(backup_path, 'w', encoding='utf-8') as f:
+                json.dump(leads, f, indent=2, ensure_ascii=False)
+            logger.info(f"Backed up {len(leads)} leads to {backup_path}")
+        
+        # Clear the database
+        save_premium_leads([])
+        
+        return jsonify({
+            'success': True,
+            'message': f'✅ Cleared {len(leads)} leads (backup saved)',
+            'backup_path': backup_path if leads else None
+        })
+    except Exception as e:
+        logger.error(f"Error clearing leads: {e}")
+        return jsonify({'success': False, 'error': str(e)})
 
 
 @app.route('/api/search')
@@ -776,6 +816,61 @@ def get_todays_leads():
             return jsonify({'success': True, 'leads': []})
     except Exception as e:
         logger.error(f"Error getting today's leads: {e}")
+        return jsonify({'success': False, 'error': str(e)})
+
+
+@app.route('/api/history')
+def get_history():
+    """Get generation history."""
+    try:
+        history_dir = "data/history"
+        if not os.path.exists(history_dir):
+            return jsonify({'success': True, 'history': []})
+        
+        history_files = sorted([f for f in os.listdir(history_dir) if f.startswith('leads_') and f.endswith('.json')], reverse=True)
+        
+        history = []
+        for filename in history_files[:30]:  # Last 30 days
+            try:
+                with open(os.path.join(history_dir, filename), 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    history.append({
+                        'date': data.get('date', filename.replace('leads_', '').replace('.json', '')),
+                        'total_leads': data.get('total_leads', len(data.get('leads', []))),
+                        'timestamp': data.get('timestamp', '')
+                    })
+            except:
+                continue
+        
+        return jsonify({'success': True, 'history': history})
+    except Exception as e:
+        logger.error(f"Error getting history: {e}")
+        return jsonify({'success': False, 'error': str(e)})
+
+
+@app.route('/api/history/all')
+def get_all_history():
+    """Get all historical leads."""
+    try:
+        history_dir = "data/history"
+        if not os.path.exists(history_dir):
+            return jsonify({'success': True, 'leads': [], 'total': 0})
+        
+        all_leads = []
+        history_files = sorted([f for f in os.listdir(history_dir) if f.startswith('leads_') and f.endswith('.json')], reverse=True)
+        
+        for filename in history_files:
+            try:
+                with open(os.path.join(history_dir, filename), 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    leads = data.get('leads', [])
+                    all_leads.extend(leads)
+            except:
+                continue
+        
+        return jsonify({'success': True, 'leads': all_leads, 'total': len(all_leads)})
+    except Exception as e:
+        logger.error(f"Error getting all history: {e}")
         return jsonify({'success': False, 'error': str(e)})
 
 
