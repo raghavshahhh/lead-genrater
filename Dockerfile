@@ -42,9 +42,29 @@ RUN mkdir -p /app/data /app/data/history /app/data/backups /app/logs
 # - config/settings.json (API keys)
 
 ENV FLASK_ENV=production
+ENV PYTHONUNBUFFERED=1
+
+# Create non-root user for security
+RUN useradd -m -u 1000 appuser && \
+    chown -R appuser:appuser /app
+
+USER appuser
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD python -c "import requests; requests.get('http://localhost:5002/api/stats', timeout=5)"
 
 # Expose port used by Render
 EXPOSE 5002
 
-# Production server
-CMD ["gunicorn", "--bind", "0.0.0.0:5002", "dashboard:app", "--workers", "3", "--timeout", "120"]
+# Production server with optimized settings
+CMD ["gunicorn", "--bind", "0.0.0.0:5002", "dashboard:app", \
+     "--workers", "3", \
+     "--threads", "2", \
+     "--timeout", "120", \
+     "--keep-alive", "5", \
+     "--max-requests", "1000", \
+     "--max-requests-jitter", "100", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-", \
+     "--log-level", "info"]

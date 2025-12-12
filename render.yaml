@@ -14,5 +14,16 @@ services:
         value: 5002
       - key: PYTHONUNBUFFERED
         value: 1
-    healthCheckPath: /
+      - key: SECRET_KEY
+        generateValue: true
+      - key: RATE_LIMIT_ENABLED
+        value: true
+      - key: RATE_LIMIT_PER_MINUTE
+        value: 10
+      # Add your API keys in Render dashboard (don't commit them!)
+      # - key: SERPAPI_KEY
+      #   sync: false
+      # - key: GEMINI_API_KEY
+      #   sync: false
+    healthCheckPath: /api/stats
     autoDeploy: true

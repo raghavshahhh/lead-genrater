@@ -13,23 +13,29 @@ class ConfigurationError(Exception):
 
 def load_config(config_path: str = "config/settings.json") -> dict[str, Any]:
     """
-    Load configuration from JSON file and environment variables.
+    Load configuration from environment variables (priority) or JSON file (fallback).
     
     Args:
-        config_path: Path to the configuration JSON file
+        config_path: Path to the configuration JSON file (fallback)
         
     Returns:
         Dictionary containing all configuration values
         
     Raises:
-        ConfigurationError: If configuration file is missing, invalid, or incomplete
+        ConfigurationError: If configuration is missing or incomplete
     """
-    # Check if config file exists
-    if not os.path.exists(config_path):
-        raise ConfigurationError(
-            f"Configuration file not found: {config_path}\n"
-            f"Please create it from the example: cp config/settings.example.json {config_path}"
-        )
+    # Start with empty config
+    config = {}
+    
+    # Try to load from JSON file (fallback)
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, 'r') as f:
+                config = json.load(f)
+        except json.JSONDecodeError as e:
+            raise ConfigurationError(f"Invalid JSON in {config_path}: {str(e)}")
+        except Exception as e:
+            raise ConfigurationError(f"Failed to read {config_path}: {str(e)}")
     
     # Load JSON file
     try:
@@ -46,21 +52,46 @@ def load_config(config_path: str = "config/settings.json") -> dict[str, Any]:
             f"Error: {str(e)}"
         )
     
-    # Define required fields with their types
+    # Priority: Environment variables override JSON config
+    # Load all environment variables
+    env_keys = [
+        "SERPAPI_KEY", "GEMINI_API_KEY", "GMAIL_ADDRESS", "GMAIL_APP_PASSWORD",
+        "GOOGLE_SHEET_ID", "GOOGLE_SERVICE_ACCOUNT_JSON",
+        "MIN_RATING", "MIN_REVIEWS", "MAX_LEADS_PER_RUN",
+        "SECRET_KEY", "DATABASE_URL", "RATE_LIMIT_ENABLED", "RATE_LIMIT_PER_MINUTE"
+    ]
+    
+    for key in env_keys:
+        env_value = os.getenv(key)
+        if env_value is not None:
+            # Convert numeric values
+            if key in ["MIN_RATING", "MIN_REVIEWS", "MAX_LEADS_PER_RUN", "RATE_LIMIT_PER_MINUTE"]:
+                try:
+                    config[key] = float(env_value) if '.' in env_value else int(env_value)
+                except ValueError:
+                    pass
+            elif key == "RATE_LIMIT_ENABLED":
+                config[key] = env_value.lower() in ['true', '1', 'yes']
+            else:
+                config[key] = env_value
+    
+    # Define required fields
     required_fields = {
-        "GOOGLE_SHEET_ID": str,
-        "GOOGLE_SERVICE_ACCOUNT_JSON": str,
         "MIN_RATING": (int, float),
         "MIN_REVIEWS": int,
         "MAX_LEADS_PER_RUN": int
     }
     
-    # Optional fields (for FREE version)
+    # Optional but recommended fields
     optional_fields = {
         "SERPAPI_KEY": str,
         "GEMINI_API_KEY": str,
         "GMAIL_ADDRESS": str,
-        "GMAIL_APP_PASSWORD": str
+        "GMAIL_APP_PASSWORD": str,
+        "GOOGLE_SHEET_ID": str,
+        "GOOGLE_SERVICE_ACCOUNT_JSON": str,
+        "SECRET_KEY": str,
+        "DATABASE_URL": str
     }
     
     # Validate required fields

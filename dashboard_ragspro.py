@@ -12,6 +12,7 @@ from datetime import datetime
 import threading
 import time
 import logging
+from functools import wraps
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -21,7 +22,21 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-# Global state
+# Configure Flask
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
+
+# Rate Limiting
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"
+)
+
+# Global state with thread safety
 generation_status = {
     'running': False,
     'progress': 0,
@@ -33,78 +48,95 @@ generation_status = {
     'latest_leads': []
 }
 
+# Thread locks for safety
+status_lock = threading.Lock()
+file_lock = threading.Lock()
+generation_lock = threading.Lock()
+
 
 def load_premium_leads():
-    """Load premium leads from JSON file."""
+    """Load premium leads from JSON file with thread safety."""
     json_path = "data/premium_leads.json"
     
     # Ensure data directory exists
     os.makedirs("data", exist_ok=True)
     
-    if not os.path.exists(json_path):
-        logger.warning(f"Premium leads file not found at {json_path}, creating empty file")
-        # Create empty leads file
-        with open(json_path, 'w', encoding='utf-8') as f:
-            json.dump([], f)
-        return []
-    
-    try:
-        with open(json_path, 'r', encoding='utf-8') as f:
-            content = f.read().strip()
-            if not content:
-                logger.warning("Premium leads file is empty")
-                return []
-            leads = json.loads(content)
-        logger.info(f"Loaded {len(leads)} leads from {json_path}")
-        return leads
-    except Exception as e:
-        logger.error(f"Error loading leads: {e}")
-        return []
+    with file_lock:  # Thread-safe file access
+        if not os.path.exists(json_path):
+            logger.warning(f"Premium leads file not found at {json_path}, creating empty file")
+            # Create empty leads file
+            with open(json_path, 'w', encoding='utf-8') as f:
+                json.dump([], f)
+            return []
+        
+        try:
+            with open(json_path, 'r', encoding='utf-8') as f:
+                content = f.read().strip()
+                if not content:
+                    logger.warning("Premium leads file is empty")
+                    return []
+                leads = json.loads(content)
+            logger.info(f"Loaded {len(leads)} leads from {json_path}")
+            return leads
+        except Exception as e:
+            logger.error(f"Error loading leads: {e}")
+            return []
 
 
 def save_premium_leads(leads, append=False):
-    """Save premium leads to JSON file."""
+    """Save premium leads to JSON file with thread safety and atomic writes."""
     os.makedirs("data", exist_ok=True)
     os.makedirs("data/history", exist_ok=True)
     
     json_path = "data/premium_leads.json"
+    temp_path = json_path + ".tmp"
     
-    try:
-        if append and os.path.exists(json_path):
-            with open(json_path, 'r', encoding='utf-8') as f:
-                existing_leads = json.load(f)
+    with file_lock:  # Thread-safe file access
+        try:
+            if append and os.path.exists(json_path):
+                with open(json_path, 'r', encoding='utf-8') as f:
+                    existing_leads = json.load(f)
+                
+                # Remove duplicates
+                seen = set()
+                combined = []
+                for lead in existing_leads + leads:
+                    key = (lead.get('title', ''), lead.get('address', ''))
+                    if key not in seen:
+                        seen.add(key)
+                        combined.append(lead)
+                leads = combined
             
-            # Remove duplicates
-            seen = set()
-            combined = []
-            for lead in existing_leads + leads:
-                key = (lead.get('title', ''), lead.get('address', ''))
-                if key not in seen:
-                    seen.add(key)
-                    combined.append(lead)
-            leads = combined
-        
-        # Save to main file
-        with open(json_path, 'w', encoding='utf-8') as f:
-            json.dump(leads, f, indent=2, ensure_ascii=False)
-        
-        # Save to history
-        today = datetime.now().strftime('%Y-%m-%d')
-        history_path = f"data/history/leads_{today}.json"
-        history_data = {
-            'date': today,
-            'timestamp': datetime.now().isoformat(),
-            'total_leads': len(leads),
-            'leads': leads
-        }
-        with open(history_path, 'w', encoding='utf-8') as f:
-            json.dump(history_data, f, indent=2, ensure_ascii=False)
-        
-        logger.info(f"Saved {len(leads)} leads")
-        return True
-    except Exception as e:
-        logger.error(f"Error saving leads: {e}")
-        return False
+            # Atomic write: write to temp file first, then rename
+            with open(temp_path, 'w', encoding='utf-8') as f:
+                json.dump(leads, f, indent=2, ensure_ascii=False)
+            
+            # Atomic rename (prevents corruption)
+            os.replace(temp_path, json_path)
+            
+            # Save to history
+            today = datetime.now().strftime('%Y-%m-%d')
+            history_path = f"data/history/leads_{today}.json"
+            history_data = {
+                'date': today,
+                'timestamp': datetime.now().isoformat(),
+                'total_leads': len(leads),
+                'leads': leads
+            }
+            with open(history_path, 'w', encoding='utf-8') as f:
+                json.dump(history_data, f, indent=2, ensure_ascii=False)
+            
+            logger.info(f"Saved {len(leads)} leads")
+            return True
+        except Exception as e:
+            logger.error(f"Error saving leads: {e}")
+            # Clean up temp file if it exists
+            if os.path.exists(temp_path):
+                try:
+                    os.remove(temp_path)
+                except:
+                    pass
+            return False
 
 
 def generate_ai_content(lead):
@@ -180,14 +212,15 @@ FREE consultation available! Interested?
 
 
 def run_premium_generation(target_countries, num_leads, quality_threshold):
-    """Run premium lead generation."""
+    """Run premium lead generation with thread safety."""
     global generation_status
     
     try:
-        generation_status['running'] = True
-        generation_status['stop_signal'] = False
-        generation_status['progress'] = 5
-        generation_status['message'] = '🚀 Initializing...'
+        with status_lock:
+            generation_status['running'] = True
+            generation_status['stop_signal'] = False
+            generation_status['progress'] = 5
+            generation_status['message'] = '🚀 Initializing...'
         
         from src.scraper import search_places
         from src.lead_quality_filter import filter_serious_clients_only
@@ -203,8 +236,9 @@ def run_premium_generation(target_countries, num_leads, quality_threshold):
             generation_status['message'] = '❌ API Key not configured'
             return
         
-        generation_status['progress'] = 15
-        generation_status['message'] = 'Preparing queries...'
+        with status_lock:
+            generation_status['progress'] = 15
+            generation_status['message'] = 'Preparing queries...'
         
         # Filter cities
         if target_countries:
@@ -220,20 +254,22 @@ def run_premium_generation(target_countries, num_leads, quality_threshold):
                 query = f"{category} in {city}"
                 all_queries.append(query)
         
-        generation_status['progress'] = 20
-        generation_status['message'] = f'Searching {len(all_queries)} locations...'
+        with status_lock:
+            generation_status['progress'] = 20
+            generation_status['message'] = f'Searching {len(all_queries)} locations...'
         
         # Scrape leads
         premium_leads = []
         
         for i, query in enumerate(all_queries):
-            if generation_status['stop_signal'] or len(premium_leads) >= num_leads:
-                break
-            
-            progress = 20 + int((i / len(all_queries)) * 60)
-            generation_status['progress'] = progress
-            generation_status['current_query'] = query
-            generation_status['message'] = f'Searching... ({i+1}/{len(all_queries)})'
+            with status_lock:
+                if generation_status['stop_signal'] or len(premium_leads) >= num_leads:
+                    break
+                
+                progress = 20 + int((i / len(all_queries)) * 60)
+                generation_status['progress'] = progress
+                generation_status['current_query'] = query
+                generation_status['message'] = f'Searching... ({i+1}/{len(all_queries)})'
             
             try:
                 results = search_places(query, api_key)
@@ -246,32 +282,38 @@ def run_premium_generation(target_countries, num_leads, quality_threshold):
                 
                 if premium:
                     premium_leads.extend(premium)
-                    generation_status['leads_found'] = len(premium_leads)
-                    generation_status['latest_leads'].extend(premium)
+                    with status_lock:
+                        generation_status['leads_found'] = len(premium_leads)
+                        # Limit latest_leads to prevent memory leak
+                        generation_status['latest_leads'] = (generation_status['latest_leads'] + premium)[-100:]
                     save_premium_leads(premium, append=True)
                     
             except Exception as e:
                 logger.error(f"Error scraping {query}: {e}")
                 continue
         
-        generation_status['progress'] = 90
-        generation_status['message'] = 'Removing duplicates...'
+        with status_lock:
+            generation_status['progress'] = 90
+            generation_status['message'] = 'Removing duplicates...'
         
         unique_leads = remove_duplicates(premium_leads)
         
-        generation_status['progress'] = 100
-        generation_status['leads_found'] = len(unique_leads)
-        generation_status['message'] = f'✅ Complete! Generated {len(unique_leads)} premium leads'
-        generation_status['last_run'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        with status_lock:
+            generation_status['progress'] = 100
+            generation_status['leads_found'] = len(unique_leads)
+            generation_status['message'] = f'✅ Complete! Generated {len(unique_leads)} premium leads'
+            generation_status['last_run'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         
         logger.info(f"✅ Generation complete: {len(unique_leads)} leads")
         
     except Exception as e:
         logger.error(f"❌ Generation error: {e}", exc_info=True)
-        generation_status['message'] = f'❌ Error: {str(e)}'
-        generation_status['progress'] = 0
+        with status_lock:
+            generation_status['message'] = f'❌ Error: {str(e)}'
+            generation_status['progress'] = 0
     finally:
-        generation_status['running'] = False
+        with status_lock:
+            generation_status['running'] = False
 
 
 @app.route('/')
@@ -375,12 +417,14 @@ def get_stats():
 
 
 @app.route('/api/generate', methods=['POST'])
+@limiter.limit("5 per hour")  # Rate limit: 5 generations per hour
 def generate_leads():
     """Start premium lead generation."""
     global generation_status
     
-    if generation_status['running']:
-        return jsonify({'success': False, 'message': 'Generation already running'})
+    with generation_lock:  # Thread-safe check
+        if generation_status['running']:
+            return jsonify({'success': False, 'message': 'Generation already running'})
     
     try:
         data = request.json or {}
@@ -403,29 +447,30 @@ def generate_leads():
 
 @app.route('/api/status')
 def get_status():
-    """Get generation status."""
-    # Return status in format frontend expects
-    return jsonify({
-        'success': True,
-        'is_running': generation_status['running'],
-        'progress': generation_status['progress'],
-        'current_lead': generation_status.get('current_query', ''),
-        'leads_found': generation_status.get('leads_found', 0),
-        'message': generation_status.get('message', ''),
-        'status': generation_status  # Keep full status for compatibility
-    })
+    """Get generation status with thread safety."""
+    with status_lock:  # Thread-safe read
+        return jsonify({
+            'success': True,
+            'is_running': generation_status['running'],
+            'progress': generation_status['progress'],
+            'current_lead': generation_status.get('current_query', ''),
+            'leads_found': generation_status.get('leads_found', 0),
+            'message': generation_status.get('message', ''),
+            'status': generation_status.copy()  # Return copy to prevent external modification
+        })
 
 
 @app.route('/api/stop', methods=['POST'])
 def stop_generation():
-    """Stop generation."""
+    """Stop generation with thread safety."""
     global generation_status
     
-    if not generation_status['running']:
-        return jsonify({'success': False, 'message': 'Generation is not running'})
-    
-    generation_status['stop_signal'] = True
-    generation_status['message'] = '🛑 Stopping...'
+    with status_lock:  # Thread-safe write
+        if not generation_status['running']:
+            return jsonify({'success': False, 'message': 'Generation is not running'})
+        
+        generation_status['stop_signal'] = True
+        generation_status['message'] = '🛑 Stopping...'
     
     return jsonify({'success': True, 'message': 'Stop signal sent'})
 
@@ -455,8 +500,9 @@ def search_leads():
 
 
 @app.route('/api/lead/<int:lead_id>/ai-content')
+@limiter.limit("30 per minute")  # Rate limit: 30 AI requests per minute
 def get_lead_ai_content(lead_id):
-    """Generate AI content for a specific lead."""
+    """Generate AI content for a specific lead with caching."""
     try:
         leads = load_premium_leads()
         
@@ -465,14 +511,21 @@ def get_lead_ai_content(lead_id):
         
         lead = leads[lead_id]
         
+        # Check if AI content already exists (cached)
+        if lead.get('ai_content'):
+            logger.info(f"Using cached AI content for lead {lead_id}")
+            return jsonify({'success': True, 'ai_content': lead['ai_content'], 'lead': lead, 'cached': True})
+        
         # Generate AI content
+        logger.info(f"Generating new AI content for lead {lead_id}")
         ai_content = generate_ai_content(lead)
         
-        # Save it back
+        # Save it back with timestamp
         lead['ai_content'] = ai_content
+        lead['ai_generated_at'] = datetime.now().isoformat()
         save_premium_leads(leads)
         
-        return jsonify({'success': True, 'ai_content': ai_content, 'lead': lead})
+        return jsonify({'success': True, 'ai_content': ai_content, 'lead': lead, 'cached': False})
     except Exception as e:
         logger.error(f"Error generating AI content: {e}")
         return jsonify({'success': False, 'error': str(e)})
