@@ -1,19 +1,28 @@
 FROM python:3.11-slim
 
-# Install system dependencies for wkhtmltopdf, pdf, images, etc
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     ca-certificates \
     wget \
-    libxrender1 \
-    libfontconfig1 \
+    curl \
+    fontconfig \
+    libfreetype6 \
+    libjpeg62-turbo \
+    libpng16-16 \
     libx11-6 \
     libxcb1 \
     libxext6 \
-    xvfb \
-    libssl-dev \
-    poppler-utils \
-    wkhtmltopdf \
+    libxrender1 \
+    xfonts-75dpi \
+    xfonts-base \
+ && rm -rf /var/lib/apt/lists/*
+
+# Install wkhtmltopdf manually (not available in Debian Trixie repos)
+RUN wget -q https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltox_0.12.6.1-3.bookworm_amd64.deb \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends ./wkhtmltox_0.12.6.1-3.bookworm_amd64.deb \
+ && rm wkhtmltox_0.12.6.1-3.bookworm_amd64.deb \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
