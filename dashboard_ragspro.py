@@ -324,6 +324,14 @@ def run_premium_generation(target_countries, target_cities, business_types, num_
             lead['generated_at'] = timestamp
             lead['is_new'] = True
         
+        # CRITICAL: Save the final unique leads to database
+        if unique_leads:
+            logger.info(f"💾 Saving {len(unique_leads)} unique leads to database...")
+            save_premium_leads(unique_leads, append=True)
+            logger.info(f"✅ Successfully saved {len(unique_leads)} leads")
+        else:
+            logger.warning("⚠️ No unique leads to save")
+        
         with status_lock:
             generation_status['progress'] = 100
             generation_status['leads_found'] = len(unique_leads)
@@ -902,6 +910,29 @@ def get_all_history():
     except Exception as e:
         logger.error(f"Error getting all history: {e}")
         return jsonify({'success': False, 'error': str(e)})
+
+
+@app.route('/api/history/<date>')
+def get_history_by_date(date):
+    """Get leads for a specific date."""
+    try:
+        history_path = f"data/history/leads_{date}.json"
+        
+        if not os.path.exists(history_path):
+            return jsonify({'success': False, 'error': 'No data for this date'}), 404
+        
+        with open(history_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        return jsonify({
+            'success': True,
+            'date': date,
+            'leads': data.get('leads', []),
+            'total': data.get('total_leads', len(data.get('leads', [])))
+        })
+    except Exception as e:
+        logger.error(f"Error getting history for {date}: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 404
 
 
 @app.route('/api/send-whatsapp', methods=['POST'])
