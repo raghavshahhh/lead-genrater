@@ -20,6 +20,7 @@ FINAL_SYSTEM_STATUS.md
 # Documentation
 *.md
 !README.md
+!DEPLOYMENT_GUIDE.md
 
 # Git files
 .git/

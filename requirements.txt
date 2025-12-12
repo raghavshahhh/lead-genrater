@@ -1,0 +1,42 @@
+# RAGSPRO Dashboard - Production Requirements
+
+# Web Framework
+Flask==3.0.0
+gunicorn==21.2.0
+flask-cors==4.0.0
+
+# AI & Content Generation
+google-generativeai==0.8.3
+
+# Web Scraping
+beautifulsoup4==4.12.3
+requests==2.32.5
+serpapi==0.1.5
+
+# Data Processing
+openpyxl==3.1.2
+reportlab==4.0.7
+
+# Database
+sqlalchemy>=2.0.35
+
+# Authentication & Security
+pyjwt==2.8.0
+bcrypt==4.1.2
+
+# Google Sheets Integration
+gspread==5.12.0
+oauth2client==4.1.3
+
+# Environment Variables
+python-dotenv==1.0.0
+
+# WhatsApp Integration (optional)
+pywhatkit==5.4
+
+# PDF Generation (system wkhtmltopdf required)
+# wkhtmltopdf will be installed via Dockerfile
+
+# Additional utilities
+python-dateutil>=2.8.2
+pytz>=2023.3

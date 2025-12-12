@@ -1,48 +1,57 @@
 #!/bin/bash
 
-echo "🚀 Deploying Lead Generation Bot to GitHub"
-echo "=========================================="
+echo "🚀 RAGSPRO Deployment Script"
+echo "=============================="
+echo ""
 
-# Check if git is initialized
-if [ ! -d ".git" ]; then
-    echo "📦 Initializing git repository..."
-    git init
+# Check if Docker is installed
+if ! command -v docker &> /dev/null; then
+    echo "❌ Docker is not installed. Please install Docker first."
+    exit 1
 fi
 
-# Add all files
-echo "📝 Adding files..."
-git add .
+echo "✅ Docker found"
+echo ""
 
-# Commit
-echo "💾 Committing changes..."
-read -p "Enter commit message (default: 'Update system'): " commit_msg
-commit_msg=${commit_msg:-"Update system"}
-git commit -m "$commit_msg"
+# Build Docker image
+echo "📦 Building Docker image..."
+docker build -t ragspro-dashboard:latest .
 
-# Check if remote exists
-if ! git remote | grep -q "origin"; then
-    echo "🔗 Adding GitHub remote..."
-    read -p "Enter your GitHub repository URL: " repo_url
-    git remote add origin "$repo_url"
+if [ $? -ne 0 ]; then
+    echo "❌ Docker build failed"
+    exit 1
 fi
 
-# Push to GitHub
-echo "⬆️  Pushing to GitHub..."
-git branch -M main
-git push -u origin main
+echo "✅ Docker image built successfully"
+echo ""
 
+# Test Docker image locally
+echo "🧪 Testing Docker image locally..."
+echo "Starting container on port 5002..."
+docker run -d -p 5002:5002 --name ragspro-test ragspro-dashboard:latest
+
+if [ $? -ne 0 ]; then
+    echo "❌ Docker run failed"
+    exit 1
+fi
+
+echo "✅ Container started successfully"
 echo ""
-echo "✅ Deployment complete!"
+echo "🌐 Dashboard should be available at: http://localhost:5002"
 echo ""
-echo "📋 Next steps:"
-echo "1. Go to https://render.com"
-echo "2. Sign up / Login with GitHub"
-echo "3. Click 'New +' → 'Web Service'"
-echo "4. Select your repository"
-echo "5. Add environment variables:"
-echo "   - GEMINI_API_KEY"
-echo "   - GMAIL_ADDRESS"
-echo "   - GMAIL_APP_PASSWORD"
-echo "6. Click 'Create Web Service'"
+echo "To view logs: docker logs ragspro-test"
+echo "To stop: docker stop ragspro-test"
+echo "To remove: docker rm ragspro-test"
 echo ""
-echo "🎉 Your app will be live in 5-10 minutes!"
+echo "📝 Next steps for Render deployment:"
+echo "1. Commit and push to GitHub:"
+echo "   git add ."
+echo "   git commit -m 'Add Docker and Render deployment'"
+echo "   git push origin main"
+echo ""
+echo "2. Go to Render Dashboard: https://dashboard.render.com"
+echo "3. Click 'New +' -> 'Blueprint'"
+echo "4. Connect your GitHub repo: raghavshahhh/lead-genrater"
+echo "5. Render will auto-detect render.yaml and deploy!"
+echo ""
+echo "✅ Deployment script complete!"

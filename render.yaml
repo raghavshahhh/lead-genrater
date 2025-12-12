@@ -1,14 +1,18 @@
 services:
   - type: web
-    name: lead-generator
-    env: python
-    region: oregon
+    name: ragspro-dashboard
+    env: docker
     plan: free
+    region: oregon
     branch: main
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn dashboard_premium:app --bind 0.0.0.0:$PORT --timeout 120 --workers 2
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.10.0
+      - key: FLASK_ENV
+        value: production
       - key: PORT
-        generateValue: true
+        value: 5002
+      - key: PYTHONUNBUFFERED
+        value: 1
+    healthCheckPath: /
+    autoDeploy: true

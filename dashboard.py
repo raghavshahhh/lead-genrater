@@ -9,6 +9,12 @@ Port: 5002
 from dashboard_ragspro import *
 
 if __name__ == '__main__':
+    import os
+    
+    # Get port from environment variable (for Render/Heroku) or default to 5002
+    port = int(os.environ.get("PORT", 5002))
+    debug_mode = os.environ.get("FLASK_ENV", "development") != "production"
+    
     print("""
     ╔══════════════════════════════════════════════════════════╗
     ║           RAGSPRO DASHBOARD - DEFAULT ENTRY              ║
@@ -20,7 +26,7 @@ if __name__ == '__main__':
     ║  This is your DEFAULT dashboard - always use this!       ║
     ╚══════════════════════════════════════════════════════════╝
     
-    🚀 Dashboard running at: http://localhost:5002
+    🚀 Dashboard running at: http://0.0.0.0:{port}
     📊 Open your browser and start generating premium leads!
     
     ⚡ Quick Commands:
@@ -28,6 +34,6 @@ if __name__ == '__main__':
        - View Leads: Automatically loaded
        - Search: Use search box
        - Export: Click "CSV" button
-    """)
+    """.format(port=port))
     
-    app.run(debug=True, host='0.0.0.0', port=5002)
+    app.run(debug=debug_mode, host='0.0.0.0', port=port)
