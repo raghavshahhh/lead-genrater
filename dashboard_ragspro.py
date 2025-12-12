@@ -372,7 +372,16 @@ def generate_leads():
 @app.route('/api/status')
 def get_status():
     """Get generation status."""
-    return jsonify({'success': True, 'status': generation_status})
+    # Return status in format frontend expects
+    return jsonify({
+        'success': True,
+        'is_running': generation_status['running'],
+        'progress': generation_status['progress'],
+        'current_lead': generation_status.get('current_query', ''),
+        'leads_found': generation_status.get('leads_found', 0),
+        'message': generation_status.get('message', ''),
+        'status': generation_status  # Keep full status for compatibility
+    })
 
 
 @app.route('/api/stop', methods=['POST'])

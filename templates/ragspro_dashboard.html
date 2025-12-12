@@ -1990,7 +1990,7 @@ Keep it conversational, highlight their pain points, and include a clear call-to
 
         async function checkGenerationStatus() {
             try {
-                const response = await fetch('/api/generation-status');
+                const response = await fetch('/api/status');
                 const data = await response.json();
 
                 if (data.is_running) {
